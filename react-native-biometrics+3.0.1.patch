@@ -1,0 +1,66 @@
+diff --git a/node_modules/react-native-biometrics/android/src/main/java/.DS_Store b/node_modules/react-native-biometrics/android/src/main/java/.DS_Store
+new file mode 100644
+index 0000000..83cd492
+Binary files /dev/null and b/node_modules/react-native-biometrics/android/src/main/java/.DS_Store differ
+diff --git a/node_modules/react-native-biometrics/android/src/main/java/com/.DS_Store b/node_modules/react-native-biometrics/android/src/main/java/com/.DS_Store
+new file mode 100644
+index 0000000..0f37bdc
+Binary files /dev/null and b/node_modules/react-native-biometrics/android/src/main/java/com/.DS_Store differ
+diff --git a/node_modules/react-native-biometrics/android/src/main/java/com/rnbiometrics/ReactNativeBiometrics.java b/node_modules/react-native-biometrics/android/src/main/java/com/rnbiometrics/ReactNativeBiometrics.java
+index 624ecd9..989b067 100644
+--- a/node_modules/react-native-biometrics/android/src/main/java/com/rnbiometrics/ReactNativeBiometrics.java
++++ b/node_modules/react-native-biometrics/android/src/main/java/com/rnbiometrics/ReactNativeBiometrics.java
+@@ -156,6 +156,7 @@ public class ReactNativeBiometrics extends ReactContextBaseJavaModule {
+                                 String payload = params.getString("payload");
+                                 String cancelButtonText = params.getString("cancelButtonText");
+                                 boolean allowDeviceCredentials = params.getBoolean("allowDeviceCredentials");
++                                boolean isRequiredConfirmation = params.getBoolean("isRequiredConfirmation");
+ 
+                                 Signature signature = Signature.getInstance("SHA256withRSA");
+                                 KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
+@@ -171,7 +172,7 @@ public class ReactNativeBiometrics extends ReactContextBaseJavaModule {
+                                 Executor executor = Executors.newSingleThreadExecutor();
+                                 BiometricPrompt biometricPrompt = new BiometricPrompt(fragmentActivity, executor, authCallback);
+ 
+-                                biometricPrompt.authenticate(getPromptInfo(promptMessage, cancelButtonText, allowDeviceCredentials), cryptoObject);
++                                biometricPrompt.authenticate(getPromptInfo(promptMessage, cancelButtonText, allowDeviceCredentials, isRequiredConfirmation), cryptoObject);
+                             } catch (Exception e) {
+                                 promise.reject("Error signing payload: " + e.getMessage(), "Error generating signature: " + e.getMessage());
+                             }
+@@ -182,8 +183,8 @@ public class ReactNativeBiometrics extends ReactContextBaseJavaModule {
+         }
+     }
+ 
+-    private PromptInfo getPromptInfo(String promptMessage, String cancelButtonText, boolean allowDeviceCredentials) {
+-        PromptInfo.Builder builder = new PromptInfo.Builder().setTitle(promptMessage);
++    private PromptInfo getPromptInfo(String promptMessage, String cancelButtonText, boolean allowDeviceCredentials, boolean isRequiredConfirmation) {
++        PromptInfo.Builder builder = new PromptInfo.Builder().setTitle(promptMessage).setConfirmationRequired(isRequiredConfirmation);
+ 
+         builder.setAllowedAuthenticators(getAllowedAuthenticators(allowDeviceCredentials));
+ 
+@@ -198,6 +199,9 @@ public class ReactNativeBiometrics extends ReactContextBaseJavaModule {
+         if (allowDeviceCredentials && !isCurrentSDK29OrEarlier()) {
+             return BiometricManager.Authenticators.BIOMETRIC_STRONG | BiometricManager.Authenticators.DEVICE_CREDENTIAL;
+         }
++	if (Build.VERSION.SDK_INT >= 29) {
++	    return BiometricManager.Authenticators.BIOMETRIC_WEAK;
++	}
+         return BiometricManager.Authenticators.BIOMETRIC_STRONG;
+     }
+ 
+@@ -216,13 +220,14 @@ public class ReactNativeBiometrics extends ReactContextBaseJavaModule {
+                                 String promptMessage = params.getString("promptMessage");
+                                 String cancelButtonText = params.getString("cancelButtonText");
+                                 boolean allowDeviceCredentials = params.getBoolean("allowDeviceCredentials");
++                                boolean isRequiredConfirmation = params.getBoolean("isRequiredConfirmation");
+ 
+                                 AuthenticationCallback authCallback = new SimplePromptCallback(promise);
+                                 FragmentActivity fragmentActivity = (FragmentActivity) getCurrentActivity();
+                                 Executor executor = Executors.newSingleThreadExecutor();
+                                 BiometricPrompt biometricPrompt = new BiometricPrompt(fragmentActivity, executor, authCallback);
+ 
+-                                biometricPrompt.authenticate(getPromptInfo(promptMessage, cancelButtonText, allowDeviceCredentials));
++                                biometricPrompt.authenticate(getPromptInfo(promptMessage, cancelButtonText, allowDeviceCredentials, isRequiredConfirmation));
+                             } catch (Exception e) {
+                                 promise.reject("Error displaying local biometric prompt: " + e.getMessage(), "Error displaying local biometric prompt: " + e.getMessage());
+                             }
