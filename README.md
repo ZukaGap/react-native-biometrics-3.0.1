@@ -1,2 +1,4 @@
 # react-native-biometrics-3.0.1
 react-native-biometrics+3.0.1 patch file
+
+Activates face recognition on android devices.
